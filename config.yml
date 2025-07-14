@@ -1,0 +1,29 @@
+- type: llm
+  provider: llama-cpp
+  name: mistral
+  settings:
+    model_path: C:/Users/Dhanesh Ramesh/OneDrive/Desktop/ML/Wren/mistral-7b-instruct-v0.1.Q4_0.gguf
+    n_ctx: 2048
+- type: embedder
+  provider: openai_embedder
+  models:
+    - model: text-embedding-ada-002
+      dimension: 1536
+- type: document_store
+  provider: qdrant
+  location: http://localhost:6333
+  embedding_model_dim: 1536
+  timeout: 120
+  recreate_index: false
+- type: engine
+  provider: wren_ui
+  kwargs:
+    host: localhost
+    port: 3000
+- type: pipeline
+  pipes:
+    - name: indexing
+      llm: llama-cpp.mistral
+      embedder: openai_embedder.text-embedding-ada-002
+      document_store: qdrant
+      engine: wren_ui
