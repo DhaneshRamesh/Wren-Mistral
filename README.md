@@ -1,117 +1,119 @@
-# AI Service of Wren AI
+# Wren Mistral AI Service
 
-## Concepts
+A modular, FastAPI-based backend service for AI pipeline orchestration powered by **Mistral 7B** (via `llama-cpp-python`) and **Haystack**, designed to support RAG pipelines and job skill recommendation use cases.
 
-Please read the [documentation](https://docs.getwren.ai/oss/concept/wren_ai_service) here to understand the concepts of Wren AI Service.
+---
 
-## Setup for Local Development
+## 🚀 Features
 
-### Prerequisites
+* ⚙️ Modular pipeline components using Hamilton
+* 🧠 Integrated Mistral 7B model (Q4 GGUF) via `llama-cpp-python`
+* 🔍 Semantic search with Qdrant
+* 🌐 REST API using FastAPI + OpenAPI Docs
+* 🧪 Health check & versioned routes (`/v1`, `/dev`)
+* ↻ Hot-reload for development mode
+* 📊 Langfuse support for telemetry (can be disabled)
+* 🛠️ Configurable with `config.yaml` (optional)
 
-1. **Python**: Install Python 3.12.\*
+---
 
-   - Recommended: Use [`pyenv`](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation) to manage Python versions
+## 🗂️ Project Structure
 
-2. **Poetry**: Install Poetry 1.8.3
+```bash
+wren-ai-service/
+├── src/
+│   ├── core/             # Pipelines and components
+│   ├── models/           # Pydantic models
+│   ├── providers/        # Mistral, Vector DB, etc.
+│   ├── web/              # Routes, exceptions, API handlers
+│   ├── config.py         # Settings (uses pydantic-settings)
+│   ├── globals.py        # Global registries and factories
+│   └── __main__.py       # Entry point (FastAPI app)
+├── models/               # .gguf model files (e.g., mistral-7b)
+├── requirements.txt
+└── README.md
+```
 
-   ```bash
-   curl -sSL https://install.python-poetry.org | python3 - --version 1.8.3
-   ```
+---
 
-3. **Just**: Install [Just](https://github.com/casey/just?tab=readme-ov-file#packages) command runner (version 1.36 or higher)
+## ⚙️ Setup Instructions
 
-### Step-by-Step Setup
+### 🐍 1. Create virtual environment
 
-1. **Install Dependencies**:
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
 
-   ```bash
-   poetry install
-   ```
+---
 
-2. **Generate Configuration Files**:
+### 📦 2. Install dependencies
 
-   ```bash
-   just init
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-   This creates both `.env.dev` and `config.yaml`. Use `just init --non-dev` to generate only `config.yaml`.
+Or manually:
 
-    > For Windows, add the line `set shell:= ["bash", "-cu"]` at the start of the Justfile.
+```bash
+pip install fastapi uvicorn orjson pyyaml httptools uvloop \
+            llama-cpp-python qdrant-client openai \
+            hamilton pydantic-settings toml \
+            farm-haystack
+```
 
-4. **Configure Environment**:
+---
 
-   - Edit `.env.dev` to set environment variables
-   - Modify `config.yaml` to configure components, pipelines, and other settings
-   - Refer to [AI Service Configuration](./docs/configuration.md) for detailed setup instructions
+### 📀 3. Download the Mistral 7B model
 
-5. **Set Up Development Environment** (optional):
+Run:
 
-   - Install pre-commit hooks:
+```bash
+python download_model.py
+```
 
-     ```bash
-     poetry run pre-commit install
-     ```
+This downloads `mistral-7b-instruct-v0.1.Q4_0.gguf` into the `models/` directory.
 
-   - Run initial pre-commit checks:
+---
 
-     ```bash
-     poetry run pre-commit run --all-files
-     ```
+## 🏁 Run the Service
 
-6. **Run Tests** (optional):
+```bash
+python -m src.__main__
+```
 
-   ```bash
-   just test
-   ```
+Then open:
 
-### Starting the Service
+```
+http://localhost:8000/docs
+```
 
-1. **Start Required Containers**:
+For interactive OpenAPI docs.
 
-   ```bash
-   just up
-   ```
+---
 
-2. **Launch the AI Service**:
+## �힧 Health Check
 
-   ```bash
-   just start
-   ```
+```
+GET /health
+→ { "status": "ok" }
+```
 
-3. **Access the Service**:
+---
 
-   - API Documentation: `http://WREN_AI_SERVICE_HOST:WREN_AI_SERVICE_PORT` (default: <http://localhost:5556>)
-   - User Interface: `http://WREN_UI_HOST:WREN_UI_PORT` (default: <http://localhost:3000>)
+## 📌 Notes
 
-4. **Stop the Service**:
-   When finished, stop the containers:
+* If `pydantic` schema error for `DataFrame` occurs, ensure the BaseModel includes:
 
-   ```bash
-   just down
-   ```
+```python
+class Config:
+    arbitrary_types_allowed = True
+```
 
-This setup ensures a consistent development environment and helps maintain code quality through pre-commit hooks and tests. Follow these steps to get started with local development of the Wren AI Service.
+* You can create `.env.dev` or `config.yaml` to override default config.
 
-## Others
+---
 
-### Pipeline Evaluation
+## 📜 License
 
-For a comprehensive understanding of how to evaluate the pipelines, please refer to the [evaluation framework](./eval/README.md). This document provides detailed guidelines on the evaluation process, including how to set up and run evaluations, interpret results, and utilize the evaluation metrics effectively. It is a valuable resource for ensuring that the evaluation is conducted accurately and that the results are meaningful.
-
-### Estimate the Speed of the Pipeline(may be outdated)
-
-- to run the load test
-  - setup `DATASET_NAME` in `.env.dev`
-  - adjust test config if needed
-    - adjust user count in `tests/locust/config_users.json`
-  - in wren-ai-service folder, run `just up` to start the docker containers
-  - in wren-ai-service folder, run `just start` to start the ai service
-  - run `just load-test`
-  - check reports in /outputs/locust folder, there are 3 files with filename **locust*report*{test_timestamp}**:
-    - .json: test report in json format, including info like llm provider, version
-    - .html: test report in html format, showing tables and charts
-    - .log: test log
-
-## Contributing
-
-Thank you for investing your time in contributing to our project! Please [read this for more information](CONTRIBUTING.md)!
+MIT © Dhanesh Ramesh
